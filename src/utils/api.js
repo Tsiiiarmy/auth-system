@@ -377,3 +377,35 @@ export const verifyPasswordResetCode = async (email, code) => {
 
   return JSON.parse(data);
 };
+
+
+export const getAllUsers = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/users`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.text();
+
+  if (!response.ok) {
+    let errorMessage = "Failed to get users.";
+
+    try {
+      const parsedData = JSON.parse(data);
+      errorMessage =
+        parsedData.message ||
+        parsedData.error ||
+        errorMessage;
+    } catch {
+      if (data) {
+        errorMessage = data;
+      }
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return JSON.parse(data);
+};

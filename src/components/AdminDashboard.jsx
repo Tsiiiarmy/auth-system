@@ -1,7 +1,61 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getAllUsers } from "../utils/api";
 
 function AdminDashboard({ user }) {
   const navigate = useNavigate();
+
+  const [users, setUsers] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState("");
+
+  // =========================================
+  // Fetch all users
+  // =========================================
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      const token =
+        localStorage.getItem("token") ||
+        sessionStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const data = await getAllUsers(token);
+
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to load dashboard statistics:", err);
+        setStatsError(err.message || "Failed to load dashboard statistics.");
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    loadUsers();
+  }, [navigate]);
+
+  // =========================================
+  // Calculate statistics
+  // =========================================
+
+  const totalUsers = users.length;
+
+  const managers = users.filter(
+    (user) => user.role === "MANAGER"
+  ).length;
+
+  const normalUsers = users.filter(
+    (user) => user.role === "USER"
+  ).length;
+
+  const twoFactorEnabled = users.filter(
+    (user) => user.twoFactorEnabled === true
+  ).length;
 
   return (
     <section className="space-y-6">
@@ -34,28 +88,42 @@ function AdminDashboard({ user }) {
 
 
       {/* =========================================
+          DASHBOARD ERROR
+      ========================================= */}
+
+      {statsError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          ⚠ {statsError}
+        </div>
+      )}
+
+
+      {/* =========================================
           SUMMARY CARDS
       ========================================= */}
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
 
         {/* Total Users */}
+
         <div className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-xl shadow-gray-200/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-200/60">
 
           <div className="flex items-start justify-between">
+
             <div>
               <p className="text-sm font-semibold text-gray-500">
                 Total Users
               </p>
 
               <p className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : totalUsers}
               </p>
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
               👥
             </div>
+
           </div>
 
           <div className="mt-4 flex items-center gap-2">
@@ -65,26 +133,30 @@ function AdminDashboard({ user }) {
               Registered accounts
             </p>
           </div>
+
         </div>
 
 
         {/* Managers */}
+
         <div className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-xl shadow-gray-200/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-200/60">
 
           <div className="flex items-start justify-between">
+
             <div>
               <p className="text-sm font-semibold text-gray-500">
                 Managers
               </p>
 
               <p className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : managers}
               </p>
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
               👔
             </div>
+
           </div>
 
           <div className="mt-4 flex items-center gap-2">
@@ -94,26 +166,30 @@ function AdminDashboard({ user }) {
               Manager role accounts
             </p>
           </div>
+
         </div>
 
 
         {/* Normal Users */}
+
         <div className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-xl shadow-gray-200/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-200/60">
 
           <div className="flex items-start justify-between">
+
             <div>
               <p className="text-sm font-semibold text-gray-500">
                 Normal Users
               </p>
 
               <p className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : normalUsers}
               </p>
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
               👤
             </div>
+
           </div>
 
           <div className="mt-4 flex items-center gap-2">
@@ -123,26 +199,30 @@ function AdminDashboard({ user }) {
               Standard access accounts
             </p>
           </div>
+
         </div>
 
 
         {/* 2FA */}
+
         <div className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-xl shadow-gray-200/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-gray-200/60">
 
           <div className="flex items-start justify-between">
+
             <div>
               <p className="text-sm font-semibold text-gray-500">
                 2FA Enabled
               </p>
 
               <p className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : twoFactorEnabled}
               </p>
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-xl">
               🔐
             </div>
+
           </div>
 
           <div className="mt-4 flex items-center gap-2">
@@ -152,6 +232,7 @@ function AdminDashboard({ user }) {
               Accounts protected with 2FA
             </p>
           </div>
+
         </div>
 
       </div>
@@ -164,6 +245,7 @@ function AdminDashboard({ user }) {
       <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-xl shadow-gray-200/40">
 
         <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+
           <div>
             <h2 className="text-lg font-bold text-gray-800">
               Administration
@@ -177,17 +259,20 @@ function AdminDashboard({ user }) {
           <div className="hidden rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-[#D71920] sm:block">
             Admin Access
           </div>
+
         </div>
 
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 
           {/* User Management */}
+
           <button
             type="button"
             onClick={() => navigate("/user-management")}
             className="group rounded-xl border border-gray-200 p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50 hover:shadow-md"
           >
+
             <div className="flex items-start justify-between">
 
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
@@ -197,6 +282,7 @@ function AdminDashboard({ user }) {
               <span className="text-lg text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-[#D71920]">
                 →
               </span>
+
             </div>
 
             <p className="mt-4 font-bold text-gray-800">
@@ -206,14 +292,18 @@ function AdminDashboard({ user }) {
             <p className="mt-1 text-sm leading-5 text-gray-500">
               View, edit, and manage system users.
             </p>
+
           </button>
 
 
           {/* Manage Roles */}
+
           <button
             type="button"
+            onClick={() => navigate("/user-management")}
             className="group rounded-xl border border-gray-200 p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50 hover:shadow-md"
           >
+
             <div className="flex items-start justify-between">
 
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
@@ -223,6 +313,7 @@ function AdminDashboard({ user }) {
               <span className="text-lg text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-[#D71920]">
                 →
               </span>
+
             </div>
 
             <p className="mt-4 font-bold text-gray-800">
@@ -232,14 +323,17 @@ function AdminDashboard({ user }) {
             <p className="mt-1 text-sm leading-5 text-gray-500">
               Control roles and access permissions.
             </p>
+
           </button>
 
 
           {/* Security Overview */}
+
           <button
             type="button"
             className="group rounded-xl border border-gray-200 p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50 hover:shadow-md"
           >
+
             <div className="flex items-start justify-between">
 
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-xl">
@@ -249,6 +343,7 @@ function AdminDashboard({ user }) {
               <span className="text-lg text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-[#D71920]">
                 →
               </span>
+
             </div>
 
             <p className="mt-4 font-bold text-gray-800">
@@ -258,9 +353,11 @@ function AdminDashboard({ user }) {
             <p className="mt-1 text-sm leading-5 text-gray-500">
               Monitor account security and protection.
             </p>
+
           </button>
 
         </div>
+
       </div>
 
 
@@ -290,6 +387,7 @@ function AdminDashboard({ user }) {
 
 
         {/* Activity Empty State */}
+
         <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/70 p-8 text-center">
 
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white text-xl shadow-sm">
