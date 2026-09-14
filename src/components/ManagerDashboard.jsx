@@ -32,48 +32,60 @@ const ManagerDashboard = ({ user }) => {
     loadUsers();
   }, [navigate]);
 
-  // Count users that the manager can consider as team members.
-  // We exclude ADMIN accounts.
-  const teamMembers = users.filter(
+  // Managers can view and edit non-admin users.
+  const managedUsers = users.filter(
     (member) => member.role !== "ADMIN"
+  );
+
+  const teamMembers = managedUsers.length;
+
+  const verifiedUsers = managedUsers.filter(
+    (member) =>
+      member.emailVerified && member.phoneVerified
+  ).length;
+
+  const unverifiedUsers = managedUsers.filter(
+    (member) =>
+      !member.emailVerified || !member.phoneVerified
+  ).length;
+
+  const twoFactorEnabled = managedUsers.filter(
+    (member) => member.twoFactorEnabled === true
   ).length;
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-2xl">
-              👔
-            </div>
-
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-red-600">
-                Manager Dashboard
-              </p>
-
-              <h1 className="mt-1 text-3xl font-bold text-gray-800">
-                Welcome back, {user?.fullName || "Manager"}!
-              </h1>
-            </div>
+      <div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-2xl">
+            👔
           </div>
 
-          <p className="mt-3 text-gray-500">
-            Monitor your team, projects, and assigned tasks from one place.
-          </p>
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-red-600">
+              Manager Dashboard
+            </p>
+
+            <h1 className="mt-1 text-3xl font-bold text-gray-800">
+              Welcome back, {user?.fullName || "Manager"}!
+            </h1>
+          </div>
         </div>
+
+        <p className="mt-3 text-gray-500">
+          Monitor users, account verification, and security status.
+        </p>
       </div>
 
-      {/* Overview Cards */}
+      {/* User Statistics */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-
         {/* Team Members */}
         <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Team Members
+                Users
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-gray-800">
@@ -81,7 +93,7 @@ const ManagerDashboard = ({ user }) => {
               </h2>
 
               <p className="mt-2 text-xs text-gray-400">
-                Members under your management
+                Non-admin users
               </p>
             </div>
 
@@ -91,208 +103,131 @@ const ManagerDashboard = ({ user }) => {
           </div>
         </div>
 
-        {/* Active Projects */}
+        {/* Verified Users */}
         <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Active Projects
+                Fully Verified
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : verifiedUsers}
               </h2>
 
               <p className="mt-2 text-xs text-gray-400">
-                Projects currently in progress
+                Email and phone verified
               </p>
             </div>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
-              📁
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-xl">
+              ✓
             </div>
           </div>
         </div>
 
-        {/* Pending Tasks */}
+        {/* Users Needing Attention */}
         <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Pending Tasks
+                Needs Attention
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : unverifiedUsers}
               </h2>
 
               <p className="mt-2 text-xs text-gray-400">
-                Tasks waiting for completion
+                Missing verification
               </p>
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
-              ⏳
+              !
             </div>
           </div>
         </div>
 
-        {/* Completed Tasks */}
+        {/* 2FA */}
         <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">
-                Completed Tasks
+                2FA Enabled
               </p>
 
               <h2 className="mt-3 text-3xl font-bold text-gray-800">
-                --
+                {loadingStats ? "..." : twoFactorEnabled}
               </h2>
 
               <p className="mt-2 text-xs text-gray-400">
-                Tasks completed by your team
+                Users with 2FA enabled
               </p>
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-xl">
-              ✅
+              🛡️
             </div>
           </div>
         </div>
       </div>
 
-      {/* Management Section */}
+      {/* User Management */}
       <div>
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-800">
-            Management
+            User Management
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Manage your team and keep track of ongoing work.
+            View and update user information and monitor account status.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
-          {/* Team Management */}
-          <div
-            onClick={() => navigate("/user-management")}
-            className="group cursor-pointer rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-          >
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl transition group-hover:bg-red-100">
-                👥
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Team Management
-                </h3>
-
-                <p className="mt-1 text-sm leading-6 text-gray-500">
-                  View team members and manage the people assigned to
-                  your team.
-                </p>
-
-                <button className="mt-4 text-sm font-semibold text-red-600 transition group-hover:text-red-700">
-                  View Team →
-                </button>
-              </div>
+        <div
+          onClick={() => navigate("/users")}
+          className="group cursor-pointer rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl transition group-hover:bg-red-100">
+              👥
             </div>
-          </div>
 
-          {/* Project Overview */}
-          <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl">
-                📊
-              </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-800">
+                View & Manage Users
+              </h3>
 
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Project Overview
-                </h3>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500">
+                View user information, check verification status, review
+                security settings, and edit user details.
+              </p>
 
-                <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Monitor project progress, deadlines, and overall team
-                  performance.
-                </p>
-
-                <button className="mt-4 text-sm font-semibold text-gray-400">
-                  Coming Soon
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Task Management */}
-          <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl">
-                📋
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Task Management
-                </h3>
-
-                <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Review assigned tasks and keep track of their progress
-                  and completion.
-                </p>
-
-                <button className="mt-4 text-sm font-semibold text-gray-400">
-                  Coming Soon
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Team Activity */}
-          <div className="group rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-            <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl">
-                🔔
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Team Activity
-                </h3>
-
-                <p className="mt-1 text-sm leading-6 text-gray-500">
-                  Stay updated on recent activity and important changes
-                  within your team.
-                </p>
-
-                <button className="mt-4 text-sm font-semibold text-gray-400">
-                  Coming Soon
-                </button>
-              </div>
+              <button className="mt-4 text-sm font-semibold text-red-600 transition group-hover:text-red-700">
+                Manage Users →
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Manager Overview */}
+      {/* User Status Overview */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-xl">
-            💼
+            📊
           </div>
 
           <div>
             <h2 className="text-xl font-bold text-gray-800">
-              Manager Overview
+              User Status Overview
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
-              Use this dashboard to monitor your team, coordinate ongoing
-              work, and keep track of projects and assigned tasks. Additional
-              project and task statistics will appear here once those
-              features are connected to the backend.
+              Monitor the verification and security status of users in the
+              system. You can open User Management to review individual
+              accounts and make permitted changes.
             </p>
           </div>
         </div>

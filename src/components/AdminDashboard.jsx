@@ -269,7 +269,7 @@ function AdminDashboard({ user }) {
 
           <button
             type="button"
-            onClick={() => navigate("/user-management")}
+            onClick={() => navigate("/users")}
             className="group rounded-xl border border-gray-200 p-5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-red-200 hover:bg-red-50/50 hover:shadow-md"
           >
 
